@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 import subprocess
+import tempfile
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -121,6 +123,46 @@ def setup_skills(task_id: str, skills: str, skills_path: str) -> None:
              f"{skills_path}/{line}", f"{task_id}:/root/skills"],
             capture_output=True, text=True,
         )
+
+
+def inject_openclaw_models(task_id: str, models_config: dict) -> None:
+    """Inject custom models into ~/.openclaw/openclaw.json."""
+    container_tmp_path = "/tmp/openclaw_models.json"
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as tmp_file:
+        json.dump(models_config, tmp_file, indent=2)
+        tmp_file_path = tmp_file.name
+
+    try:
+        cp_r = subprocess.run(
+            ["docker", "cp", tmp_file_path, f"{task_id}:{container_tmp_path}"],
+            capture_output=True, text=True,
+        )
+        if cp_r.returncode != 0:
+            raise RuntimeError(f"Failed to copy models config into container:\n{cp_r.stderr}")
+
+        inject_cmd = f"""python3 - <<'PY'
+import json
+import pathlib
+
+config_path = pathlib.Path('/root/.openclaw/openclaw.json')
+models_path = pathlib.Path('{container_tmp_path}')
+
+config = json.loads(config_path.read_text()) if config_path.exists() else {{}}
+models = json.loads(models_path.read_text())
+config['models'] = models
+
+config_path.write_text(json.dumps(config, indent=2))
+PY"""
+        r = subprocess.run(
+            ["docker", "exec", task_id, "/bin/bash", "-c", inject_cmd],
+            capture_output=True, text=True,
+        )
+        if r.returncode != 0:
+            raise RuntimeError(f"Failed to inject models config:\n{r.stderr}")
+    finally:
+        Path(tmp_file_path).unlink(missing_ok=True)
+
+    logger.info("[%s] Injected custom models config", task_id)
 
 
 def run_warmup(task_id: str, warmup: str) -> None:

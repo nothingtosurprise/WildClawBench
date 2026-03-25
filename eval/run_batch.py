@@ -22,6 +22,7 @@ from utils.docker_utils import (
     start_container,
     setup_workspace,
     setup_skills,
+    inject_openclaw_models,
     inject_lobster_workspace,
     run_warmup,
     run_background,
@@ -49,6 +50,7 @@ DEFAULT_MODEL    = os.environ.get("DEFAULT_MODEL",    "openrouter/anthropic/clau
 DEFAULT_PARALLEL = int(os.environ.get("DEFAULT_PARALLEL", "1"))
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+MODELS_API_KEY_PLACEHOLDER = "${MY_PROXY_API_KEY}"
 
 ALL_CATEGORIES = [
     "01_Productivity_Flow",
@@ -139,7 +141,26 @@ def set_model(task_id: str, model: str) -> None:
     logger.info("[%s] Model set: %s", task_id, model)
 
 
-def run_single_task(task: dict, model: str, lobster: dict | None = None) -> dict:
+def load_models_config(models_config_path: Path) -> dict:
+    raw_config = models_config_path.read_text(encoding="utf-8")
+    proxy_api_key = os.environ.get("MY_PROXY_API_KEY")
+    if MODELS_API_KEY_PLACEHOLDER in raw_config and not proxy_api_key:
+        raise ValueError(
+            "MY_PROXY_API_KEY must be set to a non-empty value when models config uses ${MY_PROXY_API_KEY}"
+        )
+
+    expanded_config = raw_config.replace(
+        MODELS_API_KEY_PLACEHOLDER,
+        proxy_api_key or "",
+    )
+    parsed_models_config = json.loads(expanded_config)
+    if not isinstance(parsed_models_config, dict):
+        raise ValueError(f"Models config must be a JSON object: {models_config_path}")
+    return parsed_models_config
+
+
+def run_single_task(task: dict, model: str, lobster: dict | None = None,
+                    models_config: dict | None = None) -> dict:
     """
     Execute a single task, returning a {"task_id", "scores", "error"} dict.
     Thread-safe: each task has its own container name and log directory.
@@ -185,6 +206,8 @@ def run_single_task(task: dict, model: str, lobster: dict | None = None) -> dict
         setup_workspace(task_id)
         setup_skills(task_id, skills, skills_path)
         run_warmup(task_id, task.get("warmup", ""))
+        if models_config:
+            inject_openclaw_models(task_id, models_config)
         set_model(task_id, model)
 
         if OPENROUTER_API_KEY:
@@ -330,8 +353,24 @@ Examples:
         default=None,
         help="Comma-separated env var names for skills that need API keys (e.g. GEMINI_API_KEY,FIRECRAWL_API_KEY)",
     )
+    parser.add_argument(
+        "--models-config",
+        default=None,
+        help="Path to a JSON file that will replace the top-level models field in ~/.openclaw/openclaw.json before each task",
+    )
 
     args = parser.parse_args()
+    models_config = None
+    if args.models_config:
+        models_config_path = Path(args.models_config).expanduser()
+        if not models_config_path.is_file():
+            logger.error("Models config not found: %s", models_config_path)
+            sys.exit(1)
+        try:
+            models_config = load_models_config(models_config_path.resolve())
+        except (ValueError, json.JSONDecodeError) as exc:
+            logger.error("Invalid models config: %s", exc)
+            sys.exit(1)
 
     lobster = None
     if args.lobster_workspace:
@@ -358,7 +397,7 @@ Examples:
             sys.exit(1)
         task = parse_task_md(task_file)
         logger.info("Single task mode: %s", task["task_id"])
-        run_single_task(task, args.model, lobster=lobster)
+        run_single_task(task, args.model, lobster=lobster, models_config=models_config)
         return
     if args.category.lower() == "all":
         categories = ALL_CATEGORIES
@@ -395,11 +434,11 @@ Examples:
         results: list[dict] = []
         if args.parallel <= 1:
             for task in tasks:
-                results.append(run_single_task(task, args.model, lobster=lobster))
+                results.append(run_single_task(task, args.model, lobster=lobster, models_config=models_config))
         else:
             with ThreadPoolExecutor(max_workers=args.parallel) as pool:
                 futures = {
-                    pool.submit(run_single_task, task, args.model, lobster): task["task_id"]
+                    pool.submit(run_single_task, task, args.model, lobster, models_config): task["task_id"]
                     for task in tasks
                 }
                 for future in as_completed(futures):

@@ -191,42 +191,99 @@ bash script/run.sh
 
 ### Using a Custom Model Endpoint (Without OpenRouter)
 
-If you prefer to use your own API endpoint instead of OpenRouter, you can configure a custom base URL directly in the OpenClaw config inside the Docker container.
+If you prefer to use your own API endpoint instead of OpenRouter, you can provide a JSON file and WildClawBench will inject it into `~/.openclaw/openclaw.json` before each task starts.
 
-**1. Start the container and exec into it:**
-```bash
-docker run -d --name wildclawbench wildclawbench-ubuntu:v1.2
-docker exec -it wildclawbench bash
-```
-
-**2. Edit `~/.openclaw/openclaw.json` to add your provider under `models.providers`:**
+**1. Fill in `my_api.json` (or provide your own JSON file with the same format):**
 ```json
 {
-  "models": {
-    "providers": {
-      "openai": {
-        "baseUrl": "http://your-host:port/v1",
-        "models": ["openai/gpt-4o"]
-      }
+  "providers": {
+    "my-openai-proxy": {
+      "baseUrl": "http://host.docker.internal:8000/v1",
+      "apiKey": "${MY_PROXY_API_KEY}",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "my-model",
+          "name": "My Model"
+        }
+      ]
     }
   }
 }
 ```
 
-Replace `baseUrl` with your endpoint and list the model(s) you want available.
+This file is the value written into `openclaw.json["models"]`, so it should contain the `models` object itself, not the full `openclaw.json`. If you use `${MY_PROXY_API_KEY}`, WildClawBench will replace it on the host before the config is copied into the container, so `MY_PROXY_API_KEY` must be set in `.env`. WildClawBench always replaces the existing top-level `models` field with the JSON you provide.
 
-**3. Commit the modified container as a new image:**
+**2. Set your model name and required API key in `.env`:**
 ```bash
-docker commit wildclawbench wildclawbench-custom:v1
+MY_PROXY_API_KEY=your_api_key_here
 ```
 
-**4. Update `.env` to use your model and point to the new image:**
-```
-DEFAULT_MODEL=openai/gpt-4o
-OPENAI_API_KEY=your_api_key_here
+**3. Run the benchmark with the models config file:**
+```bash
+python3 eval/run_batch.py --category 01_Productivity_Flow --models-config my_api.json --model my-openai-proxy/my-model
 ```
 
-Then run as usual with `bash script/run.sh`. The `OPENROUTER_API_KEY` is no longer required when using a custom endpoint.
+<details>
+<summary>Common provider examples</summary>
+
+OpenAI-compatible proxy:
+
+```json
+{
+  "providers": {
+    "proxy": {
+      "baseUrl": "http://host.docker.internal:8000/v1",
+      "models": [
+        {
+          "id": "gpt-4o",
+          "name": "GPT-4o"
+        }
+      ]
+    }
+  }
+}
+```
+
+Local vLLM or LM Studio:
+
+```json
+{
+  "providers": {
+    "local-openai": {
+      "baseUrl": "http://host.docker.internal:1234/v1",
+      "models": [
+        {
+          "id": "qwen2.5-coder-32b-instruct",
+          "name": "Qwen2.5 Coder 32B Instruct"
+        }
+      ]
+    }
+  }
+}
+```
+
+Provider with explicit API mode and env var key:
+
+```json
+{
+  "providers": {
+    "custom-gateway": {
+      "baseUrl": "http://host.docker.internal:9000/v1",
+      "apiKey": "${MY_PROXY_API_KEY}",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "my-reasoning-model",
+          "name": "My Reasoning Model"
+        }
+      ]
+    }
+  }
+}
+```
+
+</details>
 
 ## Check the Results
 

@@ -254,3 +254,14 @@ WildClawBench builds on top of the excellent open-source agent ecosystem. We gra
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
+
+---
+### Star History
+
+<a href="https://www.star-history.com/?repos=InternLM%2FWildClawBench&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=InternLM/WildClawBench&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=InternLM/WildClawBench&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=InternLM/WildClawBench&type=date&legend=top-left" />
+ </picture>
+</a>

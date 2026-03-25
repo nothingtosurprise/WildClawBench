@@ -44,6 +44,25 @@ Most agent benchmarks test isolated capabilities — calling a function, parsing
 
 ---
 
+## Leaderboard
+
+> Results as of 2026-03-24. Full interactive leaderboard at [internlm.github.io/WildClawBench](https://internlm.github.io/WildClawBench/).
+
+| Rank | Model | Org | Overall Score | Avg Time | Avg Cost |
+|:----:|-------|-----|:-------------:|:--------:|:--------:|
+| 🥇 | **Claude Opus 4.6** | Anthropic | **51.1%** | 508 min | $80.85 |
+| 🥈 | GPT-5.4 | OpenAI | 48.5% | 350 min | $20.08 |
+| 🥉 | MiMo V2 Pro | Xiaomi | 40.6% | 459 min | $26.47 |
+| 4 | Gemini 3.1 Pro | Google DeepMind | 38.4% | 240 min | $18.22 |
+| 5 | Qwen3.5 397B | Alibaba Cloud | 33.5% | 459 min | $22.33 |
+| 6 | GLM 5 Turbo | Zhipu AI | 33.4% | 499 min | $14.80 |
+| 7 | MiniMax M2.7 | MiniMax | 33.0% | 551 min | $7.47 |
+| 8 | Kimi K2.5 | Moonshot AI | 28.7% | 406 min | $6.73 |
+| 9 | Step 3.5 Flash | StepFun | 27.7% | 430 min | $6.63 |
+| 10 | Grok 4.20 Beta | xAI | 19.5% | 94 min | $9.63 |
+
+---
+
 ## Tasks
 
 **60 tasks** across **6 categories**, spanning English and Chinese:

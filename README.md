@@ -191,7 +191,9 @@ bash script/run.sh
 
 ### Using a Custom Model Endpoint (Without OpenRouter)
 
-If you prefer to use your own API endpoint instead of OpenRouter, you can provide a JSON file and WildClawBench will inject it into `~/.openclaw/openclaw.json` before each task starts.
+If you prefer to use your own API endpoint instead of OpenRouter, you can provide a JSON file and WildClawBench will inject it into `~/.openclaw/openclaw.json` before each task starts. 
+
+⚠️ Important: Some task prompts and evaluation scripts currently have OpenRouter explicitly mentioned or hardcoded (e.g., https://openrouter.ai/api/v1). If you bypass OpenRouter, you will need to adjust these references in the respective files manually.
 
 **1. Fill in `my_api.json` (or provide your own JSON file with the same format):**
 ```json

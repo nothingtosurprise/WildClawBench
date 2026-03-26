@@ -50,7 +50,7 @@ timeout_seconds: 1200
 - `distractors` 是 6 张干扰碎片的文件名列表。
 - `description` 是对拼好后完整图片的中文描述。
 
-如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url: `https://openrouter.ai/api/v1`，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
+如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url 通过环境变量 `OPENROUTER_BASE_URL` 获取，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
 
 ## Expected Behavior
 
@@ -198,8 +198,8 @@ def grade(**kwargs) -> dict:
                     from openai import OpenAI
 
                     client = OpenAI(
-                        api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-                        base_url="https://openrouter.ai/api/v1",
+                        api_key=os.environ["OPENROUTER_API_KEY"],
+                        base_url=os.environ["OPENROUTER_BASE_URL"],
                     )
 
                     vlm_prompt = (
@@ -216,7 +216,7 @@ def grade(**kwargs) -> dict:
                         log.info("VLM assembly check attempt %d/%d...", attempt + 1, max_retries)
                         try:
                             resp = client.chat.completions.create(
-                                model=os.environ.get("GRADING_MODEL", "openai/gpt-5.4"),
+                                model=os.environ.get("JUDGE_MODEL", "openai/gpt-5.4"),
                                 messages=[{"role": "user", "content": [
                                     {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}},
                                     {"type": "text", "text": vlm_prompt},
@@ -271,6 +271,8 @@ workspace/02_Code_Intelligence/task_3_jigsaw_puzzle_zh
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 ```

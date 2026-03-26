@@ -16,7 +16,7 @@ timeout_seconds: 1200
 3. 将分类与搭配结果保存到 `/tmp_workspace/results/outfits.json`（每套含 `outfit_id`、`style`、`gender`（female/male）、`top`/`bottom`/`shoes` 各含 `original_file`、`category`、`description`（中文））。`category` 必须使用以下标准分类名称之一：`上衣`、`裤子`、`裙子`、`鞋子`。
 4. 为每套搭配生成全身模特展示图，保存为 `/tmp_workspace/results/model_outfit_1.png` 至 `/tmp_workspace/results/model_outfit_4.png`。
 
-如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url: `https://openrouter.ai/api/v1`，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
+如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url 通过环境变量 `OPENROUTER_BASE_URL` 获取，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
 
 ## Expected Behavior
 
@@ -50,13 +50,14 @@ def grade(**kwargs) -> dict:
     import os
     import re
     import time
+    from openai import OpenAI
     from pathlib import Path
 
     GT_DIR = Path("/tmp_workspace/gt")
     GT_FILE = GT_DIR / "ground_truth.json"
 
-    VLM_MODEL = "openai/gpt-5.4"
-    OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+    VLM_MODEL = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
+    OPENROUTER_BASE_URL = os.environ["OPENROUTER_BASE_URL"]
 
     ALL_CRITERIA = [
         "basic_requirements",
@@ -65,25 +66,21 @@ def grade(**kwargs) -> dict:
         "overall_score",
     ]
 
+    client = OpenAI(api_key=os.environ["OPENROUTER_API_KEY"], base_url=OPENROUTER_BASE_URL)
+
     def _call_vlm(messages, model=None, max_tokens=2048, retries=2):
-        import requests as _req
         if model is None:
             model = VLM_MODEL
         for attempt in range(retries + 1):
             try:
-                resp = _req.post(
-                    OPENROUTER_URL,
-                    headers={
-                        "Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}",
-                        "Content-Type": "application/json",
-                    },
-                    json={"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0},
-                    timeout=120,
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=0,
                 )
-                resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                return resp.choices[0].message.content
             except Exception as e:
-                pass
                 if attempt < retries:
                     time.sleep(2 ** attempt)
                 else:
@@ -324,6 +321,8 @@ workspace/05_Creative_Synthesis/task_6_clothing_outfit_to_model_image
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 ```bash

@@ -17,7 +17,7 @@ Please watch this video carefully and produce a **comprehensive set of study not
 - Format: Markdown
 - Length: at least 800 words, no more than 3000 words
 
-If you need video understanding or multimodal capabilities, you can call the OpenRouter API (base_url: `https://openrouter.ai/api/v1`, API key available via the `OPENROUTER_API_KEY` environment variable).
+If you need video understanding or multimodal capabilities, you can call the OpenRouter API (base_url available via the `OPENROUTER_BASE_URL` environment variable, API key available via the `OPENROUTER_API_KEY` environment variable).
 
 ## Expected Behavior
 
@@ -70,7 +70,7 @@ def grade(**kwargs) -> dict:
     import json
     from pathlib import Path
 
-    grading_model = "openai/gpt-5.4"
+    grading_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
     workspace = Path("/tmp_workspace/results")
     notes_path = workspace / "notes.md"
 
@@ -101,7 +101,7 @@ def grade(**kwargs) -> dict:
     cp_scores = {}
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1")
+        client = OpenAI(api_key=os.environ["OPENROUTER_API_KEY"], base_url=os.environ["OPENROUTER_BASE_URL"])
 
         checkpoint_list = "\n".join(
             f"- **{key}**: {desc}" for key, desc in checkpoints.items()
@@ -175,6 +175,8 @@ video-frames
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 ```bash

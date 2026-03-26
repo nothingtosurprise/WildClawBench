@@ -74,12 +74,13 @@ def grade(**kwargs) -> dict:
     import os
     import urllib.request
     from pathlib import Path
+    from openai import OpenAI
 
     SLACK_AUDIT_URL = "http://localhost:9110/slack/audit"
     RESULTS_FILE    = Path("/tmp_workspace/results/results.md")
-    OPENROUTER_KEY  = os.environ.get("OPENROUTER_API_KEY", "")
-    OPENROUTER_URL  = "https://openrouter.ai/api/v1/chat/completions"
-    JUDGE_MODEL     = "openai/gpt-5.4"
+    OPENROUTER_KEY  = os.environ["OPENROUTER_API_KEY"]
+    OPENROUTER_BASE_URL  = os.environ["OPENROUTER_BASE_URL"]
+    JUDGE_MODEL     = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
 
     # ── weights (raw, will be normalised) ──
     TOOL_MAX        = 0.05
@@ -453,29 +454,25 @@ PREDICTED ANSWER:
             "Return ONLY a JSON object: "
             "{\"score\": <float 0.0-1.0>, \"reason\": \"<brief reason>\"}"
         )
-        payload = json.dumps({
-            "model": JUDGE_MODEL,
-            "max_tokens": 300,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user",   "content": user_prompt},
-            ],
-            "response_format": {"type": "json_object"},
-        }).encode()
+        client = OpenAI(
+            api_key=OPENROUTER_KEY,
+            base_url=OPENROUTER_BASE_URL,
+        )
         for attempt in range(retries):
             try:
-                req = urllib.request.Request(
-                    OPENROUTER_URL, data=payload,
-                    headers={"Content-Type": "application/json",
-                             "Authorization": f"Bearer {OPENROUTER_KEY}"},
-                    method="POST",
+                resp = client.chat.completions.create(
+                    model=JUDGE_MODEL,
+                    max_tokens=300,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user",   "content": user_prompt},
+                    ],
+                    response_format={"type": "json_object"},
                 )
-                with urllib.request.urlopen(req, timeout=25) as resp:
-                    data = json.loads(resp.read())
-                result = json.loads(data["choices"][0]["message"]["content"])
+                result = json.loads(resp.choices[0].message.content)
                 result["score"] = max(0.0, min(1.0, float(result.get("score", 0.0))))
                 return result
-            except Exception as e:
+            except Exception:
                 pass
         return {"score": 0.0, "reason": "llm_judge_failed"}
 
@@ -556,6 +553,8 @@ workspace/03_Social_Interaction/task_2_chat_action_extraction
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 

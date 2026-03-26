@@ -27,7 +27,7 @@ timeout_seconds: 1200
 - `/tmp_workspace/results/` 目录下包含完整的静态网页源码
 - `/tmp_workspace/results/screenshot.png` 为最终主页首页的完整截图
 
-如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url: `https://openrouter.ai/api/v1`，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
+如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url 通过环境变量 `OPENROUTER_BASE_URL` 获取，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
 
 ## Expected Behavior
 
@@ -206,8 +206,8 @@ def grade(**kwargs) -> dict:
         from openai import OpenAI
 
         client = OpenAI(
-            api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ["OPENROUTER_API_KEY"],
+            base_url=os.environ["OPENROUTER_BASE_URL"],
         )
 
         judge_prompt = (
@@ -231,7 +231,7 @@ def grade(**kwargs) -> dict:
             log.info("VLM Judge request %d/%d...", attempt + 1, max_retries)
             try:
                 resp = client.chat.completions.create(
-                    model=os.environ.get("GRADING_MODEL", "openai/gpt-5.4"),
+                    model=os.environ.get("JUDGE_MODEL", "openai/gpt-5.4"),
                     messages=[{
                         "role": "user",
                         "content": [
@@ -343,6 +343,8 @@ workspace/02_Code_Intelligence/task_11_resume_homepage_zh
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 
 ## Warmup

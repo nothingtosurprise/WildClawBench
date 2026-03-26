@@ -34,7 +34,7 @@ timeout_seconds: 1200
 1. `/tmp_workspace/results/result.png`：填色完成后的像素画（10×10 网格，每格按路径颜色填充）
 2. `/tmp_workspace/results/description.txt`：用**中文**描述填色后的图案是什么（一两句话即可）。即使求解不完美，也请根据已填色的部分尽量描述。
 
-如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url: `https://openrouter.ai/api/v1`，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
+如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url 通过环境变量 `OPENROUTER_BASE_URL` 获取，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
 
 ## Expected Behavior
 
@@ -91,8 +91,8 @@ def grade(**kwargs) -> dict:
     try:
         from openai import OpenAI
         client = OpenAI(
-            api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ["OPENROUTER_API_KEY"],
+            base_url=os.environ["OPENROUTER_BASE_URL"],
         )
     except Exception as e:
         log.error("OpenAI client initialization failed: %s", e)
@@ -130,7 +130,7 @@ def grade(**kwargs) -> dict:
                     log.info("VLM image comparison attempt %d/%d...", attempt + 1, max_retries)
                     try:
                         resp = client.chat.completions.create(
-                            model=os.environ.get("GRADING_MODEL", "openai/gpt-5.4"),
+                            model=os.environ.get("JUDGE_MODEL", "openai/gpt-5.4"),
                             messages=[{"role": "user", "content": [
                                 {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{gt_b64}"}},
                                 {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{pred_b64}"}},
@@ -246,7 +246,7 @@ def grade(**kwargs) -> dict:
                     log.info("LLM Judge attempt %d/%d...", attempt + 1, max_retries)
                     try:
                         response = client.chat.completions.create(
-                            model=os.environ.get("GRADING_MODEL", "openai/gpt-5.4"),
+                            model=os.environ.get("JUDGE_MODEL", "openai/gpt-5.4"),
                             messages=[{"role": "user", "content": judge_prompt}],
                             temperature=0.0,
                             max_tokens=256,
@@ -305,6 +305,8 @@ workspace/02_Code_Intelligence/task_9_link_a_pix_color_easy_zh
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 ```

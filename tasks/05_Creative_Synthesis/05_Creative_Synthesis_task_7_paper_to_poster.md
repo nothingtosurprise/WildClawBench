@@ -16,7 +16,7 @@ timeout_seconds: 600
 - 包含不少于 3 张图表（架构图、结果可视化、定量对比等）
 - 设计风格统一且专业，配色协调、排版清晰、信息层次分明
 
-如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url: `https://openrouter.ai/api/v1`，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
+如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url 通过环境变量 `OPENROUTER_BASE_URL` 获取，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
 
 ## Expected Behavior
 
@@ -40,6 +40,7 @@ def grade(**kwargs) -> dict:
     import base64
     import io
     import time
+    from openai import OpenAI
 
     ALL_CRITERIA = [
         "basic_requirements",
@@ -49,32 +50,24 @@ def grade(**kwargs) -> dict:
         "overall_score",
     ]
 
-    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-    VLM_MODEL = "openai/gpt-5.4"
-    OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+    OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
+    VLM_MODEL = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
+    OPENROUTER_BASE_URL = os.environ["OPENROUTER_BASE_URL"]
+
+    client = OpenAI(api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_BASE_URL)
 
     def _call_vlm(messages, model=None, max_tokens=2048, retries=2):
-        import requests as _req
         if model is None:
             model = VLM_MODEL
         for attempt in range(retries + 1):
             try:
-                resp = _req.post(
-                    OPENROUTER_URL,
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": model,
-                        "messages": messages,
-                        "max_tokens": max_tokens,
-                        "temperature": 0,
-                    },
-                    timeout=120,
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=0,
                 )
-                resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                return resp.choices[0].message.content
             except Exception:
                 if attempt < retries:
                     time.sleep(2 ** attempt)
@@ -328,6 +321,8 @@ workspace/05_Creative_Synthesis/task_7_paper_to_poster
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 
 ## Warmup

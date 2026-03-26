@@ -17,7 +17,7 @@ timeout_seconds: 1200
 要求：
 1. `/tmp_workspace/results/result.png`：连线完成后的图片（在原图上按编号顺序用线段连接所有点后的结果）
 
-如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url: `https://openrouter.ai/api/v1`，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
+如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url 通过环境变量 `OPENROUTER_BASE_URL` 获取，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
 
 ## Expected Behavior
 
@@ -70,8 +70,8 @@ def grade(**kwargs) -> dict:
     try:
         from openai import OpenAI
         client = OpenAI(
-            api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ["OPENROUTER_API_KEY"],
+            base_url=os.environ["OPENROUTER_BASE_URL"],
         )
     except Exception as e:
         log.error("OpenAI client initialization failed: %s", e)
@@ -111,7 +111,7 @@ def grade(**kwargs) -> dict:
                     log.info("VLM image comparison attempt %d/%d...", attempt + 1, max_retries)
                     try:
                         resp = client.chat.completions.create(
-                            model=os.environ.get("GRADING_MODEL", "openai/gpt-5.4"),
+                            model=os.environ.get("JUDGE_MODEL", "openai/gpt-5.4"),
                             messages=[{"role": "user", "content": [
                                 {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{gt_b64}"}},
                                 {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{pred_b64}"}},
@@ -168,6 +168,8 @@ workspace/02_Code_Intelligence/task_7_connect_the_dots_medium_img_zh
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 ```

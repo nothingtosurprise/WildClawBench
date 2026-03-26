@@ -17,7 +17,7 @@ Also create a visually polished 5-page A4 promotional PDF at `/tmp_workspace/res
 
 Only include hardware products (no software/service announcements).
 
-If you need video understanding or multimodal capabilities, you can call the OpenRouter API (base_url: `https://openrouter.ai/api/v1`, API key available via the `OPENROUTER_API_KEY` environment variable).
+If you need video understanding or multimodal capabilities, you can call the OpenRouter API (base_url available via the `OPENROUTER_BASE_URL` environment variable, API key available via the `OPENROUTER_API_KEY` environment variable).
 
 ## Expected Behavior
 
@@ -63,6 +63,7 @@ def grade(**kwargs) -> dict:
     import re
     import base64
     import time
+    from openai import OpenAI
 
     ALL_CRITERIA = [
         "products_file_exists",
@@ -78,34 +79,26 @@ def grade(**kwargs) -> dict:
         "overall_score",
     ]
 
-    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-    VLM_MODEL = "openai/gpt-5.4"
-    OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+    OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
+    VLM_MODEL = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
+    OPENROUTER_BASE_URL = os.environ["OPENROUTER_BASE_URL"]
 
     # ── LLM helpers ──────────────────────────────────────────────────
 
+    client = OpenAI(api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_BASE_URL)
+
     def _call_llm(messages, model=None, max_tokens=2048, retries=2):
-        import requests as _req
         if model is None:
             model = VLM_MODEL
         for attempt in range(retries + 1):
             try:
-                resp = _req.post(
-                    OPENROUTER_URL,
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": model,
-                        "messages": messages,
-                        "max_tokens": max_tokens,
-                        "temperature": 0,
-                    },
-                    timeout=120,
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=0,
                 )
-                resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                return resp.choices[0].message.content
             except Exception:
                 if attempt < retries:
                     time.sleep(2 ** attempt)
@@ -395,6 +388,8 @@ video-frames
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 
 ## Warmup

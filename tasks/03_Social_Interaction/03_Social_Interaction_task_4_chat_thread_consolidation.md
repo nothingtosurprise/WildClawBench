@@ -65,13 +65,14 @@ def grade(**kwargs) -> dict:
     """
     import json, os, urllib.request
     from pathlib import Path
+    from openai import OpenAI
 
     SLACK_AUDIT_URL = "http://localhost:9110/slack/audit"
     RESULTS_FILE = Path("/tmp_workspace/results/results.md")
 
-    LLM_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-    LLM_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-    LLM_MODEL = "openai/gpt-5.4"
+    LLM_API_BASE_URL = os.environ["OPENROUTER_BASE_URL"]
+    LLM_API_KEY = os.environ["OPENROUTER_API_KEY"]
+    LLM_MODEL = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
 
     scores = {}
 
@@ -166,30 +167,21 @@ Return ONLY a JSON object:
 
     llm_scores = None
     try:
-        payload = json.dumps({
-            "model": LLM_MODEL,
-            "messages": [
+        client = OpenAI(
+            api_key=LLM_API_KEY,
+            base_url=LLM_API_BASE_URL,
+        )
+        resp = client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[
                 {"role": "system", "content": JUDGE_SYSTEM},
                 {"role": "user", "content": judge_input},
             ],
-            "temperature": 0.0,
-            "max_tokens": 16384,
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            LLM_API_URL,
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + LLM_API_KEY,
-            },
-            method="POST",
+            temperature=0.0,
+            max_tokens=16384,
         )
 
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            result = json.loads(resp.read())
-
-        raw = result["choices"][0]["message"]["content"].strip()
+        raw = resp.choices[0].message.content.strip()
 
         if "```json" in raw:
             raw = raw.split("```json")[1].split("```")[0].strip()
@@ -292,6 +284,8 @@ workspace/03_Social_Interaction/task_4_chat_thread_consolidation
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 

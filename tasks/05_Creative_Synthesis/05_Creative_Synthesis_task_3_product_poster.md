@@ -22,7 +22,7 @@ Look at the product photo carefully, identify its standout features (material, c
 
 Save the final image to `/tmp_workspace/results/poster.png`.
 
-If you need image understanding or multimodal generation capabilities, you can call the OpenRouter API (base_url: `https://openrouter.ai/api/v1`, API key available via the `OPENROUTER_API_KEY` environment variable).
+If you need image understanding or multimodal generation capabilities, you can call the OpenRouter API (base_url available via the `OPENROUTER_BASE_URL` environment variable, API key available via the `OPENROUTER_API_KEY` environment variable).
 
 ## Expected Behavior
 
@@ -59,7 +59,7 @@ def grade(**kwargs) -> dict:
     import base64
     from pathlib import Path
 
-    grading_model = "openai/gpt-5.4"
+    grading_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
     workspace = Path("/tmp_workspace/results")
     scores = {}
 
@@ -89,7 +89,7 @@ def grade(**kwargs) -> dict:
 
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1")
+        client = OpenAI(api_key=os.environ["OPENROUTER_API_KEY"], base_url=os.environ["OPENROUTER_BASE_URL"])
 
         with open(poster_path, "rb") as f:
             img_b64 = base64.b64encode(f.read()).decode()
@@ -189,6 +189,8 @@ workspace/05_Creative_Synthesis/task_3_product_poster
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 ## Warmup
 ```bash

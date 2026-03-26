@@ -13,7 +13,7 @@ timeout_seconds: 600
 - 恰好 8 页
 - 设计风格统一且专业
 
-如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url: `https://openrouter.ai/api/v1`，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
+如果需要图像理解或多模态生成能力，可以调用 OpenRouter API（base_url 通过环境变量 `OPENROUTER_BASE_URL` 获取，API Key 通过环境变量 `OPENROUTER_API_KEY` 获取）。
 
 ## Expected Behavior
 
@@ -35,11 +35,12 @@ def grade(**kwargs) -> dict:
     import os
     import re
     import time
+    from openai import OpenAI
     from pathlib import Path
 
-    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-    VLM_MODEL = "openai/gpt-5.4"
-    OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+    OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
+    VLM_MODEL = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
+    OPENROUTER_BASE_URL = os.environ["OPENROUTER_BASE_URL"]
 
     ALL_CRITERIA = [
         "basic_requirements",
@@ -49,28 +50,20 @@ def grade(**kwargs) -> dict:
     ]
 
 
+    client = OpenAI(api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_BASE_URL)
+
     def _call_vlm(messages, model=None, max_tokens=2048, retries=2):
-        import requests as _req
         if model is None:
             model = VLM_MODEL
         for attempt in range(retries + 1):
             try:
-                resp = _req.post(
-                    OPENROUTER_URL,
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": model,
-                        "messages": messages,
-                        "max_tokens": max_tokens,
-                        "temperature": 0,
-                    },
-                    timeout=120,
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=0,
                 )
-                resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                return resp.choices[0].message.content
             except Exception as e:
                 print(f"  [VLM call attempt {attempt + 1} failed: {e}]")
                 if attempt < retries:
@@ -254,6 +247,8 @@ workspace/05_Creative_Synthesis/task_9_repo_to_slides
 
 ```
 OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+JUDGE_MODEL
 ```
 
 ## Warmup

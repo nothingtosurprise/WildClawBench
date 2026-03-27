@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import json
+import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
@@ -17,7 +18,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from utils.task_parser import parse_task_md
 from utils.docker_utils import (
-    remove_containers_by_prefix,
     remove_container,
     start_container,
     setup_workspace,
@@ -178,10 +178,13 @@ def run_single_task(task: dict, model: str, lobster: dict | None = None, thinkin
     prompt = system_prompt + prompt
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    safe_model_name = re.sub(r'[^a-zA-Z0-9.\-_]', '_', model)
+    run_id = uuid.uuid4().hex[:6]
+    _m = re.match(r"(\d+)_.*?(task_\d+)", task_id_ori)
+    short_task_id = f"{_m.group(1)}_{_m.group(2)}" if _m else task_id_ori
+    short_model = re.sub(r'[^a-zA-Z0-9.\-_]', '_', model.rsplit('/', 1)[-1])
     lobster_prefix = f"{lobster['name']}_" if lobster else ""
-    suffix = f"{lobster_prefix}{safe_model_name}_{timestamp}"
-    task_id = task_id_ori + "_" + timestamp
+    suffix = f"{lobster_prefix}{short_model}_{timestamp}_{run_id}"
+    task_id = f"{short_task_id}_{lobster_prefix}{short_model}_{timestamp}_{run_id}"
 
     output_dir = OUTPUT_DIR / task["category"] / f"{task_id_ori}" / f"{suffix}"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -193,8 +196,6 @@ def run_single_task(task: dict, model: str, lobster: dict | None = None, thinkin
     elapsed_time = float(timeout_seconds)
 
     try:
-        remove_containers_by_prefix(task_id_ori)
-
         exec_path = os.path.join(workspace_path, "exec")
         tmp_path = os.path.join(workspace_path, "tmp")
         os.makedirs(exec_path, exist_ok=True)

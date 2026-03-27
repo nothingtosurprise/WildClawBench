@@ -294,7 +294,7 @@ After the run completes, a per-category summary and a global summary (`output/su
 Per-task results are saved under:
 
 ```
-output/<category>/<task_id>/<model_timestamp>/
+output/<category>/<task_id>/<model_timestamp_runid>/
 ├── score.json       # per-metric scores
 ├── usage.json       # token counts, cost, elapsed time
 ├── agent.log        # agent execution log
@@ -302,6 +302,8 @@ output/<category>/<task_id>/<model_timestamp>/
 ├── chat.jsonl       # full conversation trace
 └── task_output/     # files produced by the agent
 ```
+
+The subdirectory name is `<short_model>_<timestamp>_<runid>`, where `short_model` is the last segment of the model path (e.g. `claude-sonnet-4.6` from `openrouter/anthropic/claude-sonnet-4.6`) and `runid` is a 6-char random hex string, so parallel or repeated runs never collide.
 
 For independent verification and side-by-side comparison, we have provided the complete evaluation details and trajectories in this Google Drive folder: [WildClawBench_details](https://drive.google.com/file/d/1FX6eidw9fNQgm15w6jOjOUCqWAQ__r0Y/view?usp=drive_link).
 
@@ -347,6 +349,22 @@ WildClawBench builds on top of the excellent open-source agent ecosystem. We gra
 - **[OpenClaw](https://github.com/openclaw/openclaw)** 
 - **[Claw-Eval](https://github.com/claw-eval/claw-eval)**
 - **[PinchBench](https://github.com/pinchbench/skill)** 
+
+---
+
+## Cleanup
+
+If a run is interrupted (e.g. `Ctrl+C`, terminal closed), some Docker containers may be left behind. To remove **all** WildClawBench containers when no tasks are running:
+
+```bash
+docker ps -a --filter "ancestor=wildclawbench-ubuntu:v1.2" -q | xargs -r docker rm -f
+```
+
+To preview which containers would be removed (dry run):
+
+```bash
+docker ps -a --filter "ancestor=wildclawbench-ubuntu:v1.2" --format "{{.Names}}\t{{.Status}}"
+```
 
 ---
 

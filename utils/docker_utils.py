@@ -16,19 +16,6 @@ TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE",  "/tmp_workspace")
 
 BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", "")
 
-def get_matching_containers(prefix: str) -> list:
-    r = subprocess.run(
-        ["docker", "ps", "-a", "--format", "{{.Names}}"],
-        capture_output=True, text=True, check=True
-    )
-    all_names = r.stdout.splitlines()
-    return [name for name in all_names if name.startswith(prefix + "_")]
-
-def remove_containers_by_prefix(prefix: str) -> None:
-    targets = get_matching_containers(prefix)
-    for container_name in targets:
-        subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
-        
 def remove_container(name: str) -> None:
     subprocess.run(["docker", "rm", "-f", name], capture_output=True)
 

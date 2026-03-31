@@ -9,7 +9,7 @@
 [![Leaderboard](https://img.shields.io/badge/🏆_Leaderboard-WildClawBench-8c2416)](https://internlm.github.io/WildClawBench/)
 [![HuggingFace](https://img.shields.io/badge/🤗_HuggingFace-Dataset-yellow)](https://huggingface.co/datasets/internlm/WildClawBench)
 [![Tasks](https://img.shields.io/badge/Tasks-60-blue)]()
-[![Models](https://img.shields.io/badge/Models-10-green)]()
+[![Models](https://img.shields.io/badge/Models-14-green)]()
 
 </div>
 
@@ -22,7 +22,7 @@
 
 We drop agents into a live [OpenClaw](https://github.com/openclaw/openclaw) environment — the same open-source personal AI assistant that real users rely on daily — and throw **60 original tasks** at them: clipping goal highlights from a football match, negotiating meeting times over multi-round emails, hunting down contradictions in search results, writing inference scripts for undocumented codebases, catching privacy leaks before they happen. Useful things. Hard things.
 
-Hard enough that **every frontier model today scores below 0.6**. That makes scores mean something.
+Hard enough that **every frontier model we tested scores below 0.55** (top overall ~0.52). That makes scores mean something.
 
 ### Why WildClawBench?
 
@@ -46,21 +46,25 @@ Most agent benchmarks test isolated capabilities — calling a function, parsing
 
 ## Leaderboard
 
-> Results as of 2026-03-24. Full interactive leaderboard at [internlm.github.io/WildClawBench](https://internlm.github.io/WildClawBench/).
+> Results as of 2026-03-27 (averaged across multiple independent runs). Full interactive leaderboard at [internlm.github.io/WildClawBench](https://internlm.github.io/WildClawBench/).
 > Gemini 3.1 Pro was evaluated in low-effort mode; scores may not reflect peak capability.
 
 | Rank | Model | Org | Overall Score | Avg Time | Avg Cost |
 |:----:|-------|-----|:-------------:|:--------:|:--------:|
-| 🥇 | **Claude Opus 4.6** | Anthropic | **51.1%** | 508 min | $80.85 |
-| 🥈 | GPT-5.4 | OpenAI | 48.5% | 350 min | $20.08 |
-| 🥉 | MiMo V2 Pro | Xiaomi | 40.6% | 459 min | $26.47 |
-| 4 | Gemini 3.1 Pro | Google DeepMind | 38.4% | 240 min | $18.22 |
-| 5 | Qwen3.5 397B | Alibaba Cloud | 33.5% | 459 min | $22.33 |
-| 6 | GLM 5 Turbo | Zhipu AI | 33.4% | 499 min | $14.80 |
-| 7 | MiniMax M2.7 | MiniMax | 33.0% | 551 min | $7.47 |
-| 8 | Kimi K2.5 | Moonshot AI | 28.7% | 406 min | $6.73 |
-| 9 | Step 3.5 Flash | StepFun | 27.7% | 430 min | $6.63 |
-| 10 | Grok 4.20 Beta | xAI | 19.5% | 94 min | $9.63 |
+| 🥇 | **Claude Opus 4.6** | Anthropic | **51.6%** | 508 min | $80.85 |
+| 🥈 | GPT-5.4 | OpenAI | 50.3% | 350 min | $20.08 |
+| 🥉 | GLM 5 | Zhipu AI | 42.6% | 373 min | $11.39 |
+| 4 | Gemini 3.1 Pro | Google DeepMind | 40.8% | 240 min | $18.22 |
+| 5 | MiMo V2 Pro | Xiaomi | 40.2% | 458 min | $26.47 |
+| 6 | Qwen3.5 397B | Alibaba Cloud | 34.5% | 459 min | $22.33 |
+| 7 | DeepSeek V3.2 | DeepSeek | 34.0% | 549 min | $11.50 |
+| 8 | GLM 5 Turbo | Zhipu AI | 33.9% | 499 min | $14.80 |
+| 9 | MiniMax M2.7 | MiniMax | 33.8% | 551 min | $7.47 |
+| 10 | Kimi K2.5 | Moonshot AI | 30.8% | 406 min | $6.73 |
+| 11 | MiMo V2 Flash | Xiaomi | 30.8% | 433 min | $10.23 |
+| 12 | MiniMax M2.5 | MiniMax | 27.1% | 542 min | $9.66 |
+| 13 | Step 3.5 Flash | StepFun | 26.7% | 430 min | $6.63 |
+| 14 | Grok 4.20 Beta | xAI | 19.3% | 94 min | $9.63 |
 
 
 ---

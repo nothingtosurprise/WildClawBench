@@ -402,7 +402,7 @@ docker ps -a --filter "ancestor=wildclawbench-ubuntu:v1.2" --format "{{.Names}}\
 MIT — see [LICENSE](LICENSE) for details.
 
 ---
-### Star History
+## Star History
 
 <a href="https://www.star-history.com/?repos=InternLM%2FWildClawBench&type=date&legend=top-left">
  <picture>
@@ -411,3 +411,17 @@ MIT — see [LICENSE](LICENSE) for details.
    <img alt="Star History Chart" src="https://api.star-history.com/image?repos=InternLM/WildClawBench&type=date&legend=top-left" />
  </picture>
 </a>
+
+## Citation
+
+If you use **WildClawBench** in your research, please cite:
+
+```bibtex
+@misc{wildclawbench,
+  author       = {Shuangrui Ding and Xuanlang Dai and Long Xing and Shengyuan Ding and Ziyu Liu and Jingyi Yang and Penghui Yang and Zhixiong Zhang and Xilin Wei and Yubo Ma and Haodong Duan and Jing Shao and Jiaqi Wang and Dahua Lin and Kai Chen and Yuhang Zang},
+  title        = {WildClawBench},
+  howpublished = {https://github.com/InternLM/WildClawBench},
+  note         = {GitHub repository},
+  year         = {2026}
+}
+```

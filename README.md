@@ -135,17 +135,17 @@ newgrp docker
 
 ### Download Image
 
-Download the Docker image tarball from [HuggingFace](https://huggingface.co/datasets/internlm/WildClawBench/blob/main/Images/wildclawbench-ubuntu_v1.2.tar):
+Download the Docker image tarball from [HuggingFace](https://huggingface.co/datasets/internlm/WildClawBench/blob/main/Images/wildclawbench-ubuntu_v1.3.tar):
 
 ```bash
 pip install -U huggingface_hub
-huggingface-cli download internlm/WildClawBench Images/wildclawbench-ubuntu_v1.2.tar --repo-type dataset --local-dir .
+huggingface-cli download internlm/WildClawBench Images/wildclawbench-ubuntu_v1.3.tar --repo-type dataset --local-dir .
 ```
 
 Then load the image:
 
 ```bash
-docker load -i Images/wildclawbench-ubuntu_v1.2.tar
+docker load -i Images/wildclawbench-ubuntu_v1.3.tar
 ```
 
 ### Download Task Data
@@ -171,9 +171,13 @@ The script will:
 - Extract `dot_git.tar.gz` for Safety Alignment tasks
 - Download SAM3 model weights for Code Intelligence tasks
 
+
 Prerequisites: `yt-dlp`, `ffmpeg`, `gdown`.
 
-> If you encounter a cookie authentication issue, you can obtain a `cookies.txt` file by using this extension: [Get cookies.txt locally](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc?pli=1).
+> **Note:** YouTube downloads may require authentication. If you encounter a "Sign in to confirm you're not a bot" error, try one of the following:
+> - [Get cookies.txt locally](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc?pli=1).
+> - Use `--cookies-from-browser` (e.g., `--cookies-from-browser chrome`)
+> - Install [Deno](https://deno.land/) as a JS engine, which some users have reported resolves the issue
 
 ### Run
 
